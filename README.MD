@@ -52,18 +52,30 @@ Endpoints used:
 # Project Structure
 etl-api-pipeline/
 │
+
 ├─ README.md
+
 ├─ requirements.txt
+
 ├─ .env.example
+
 │
+
 ├─ data/
+
 │   ├─ raw/
+
 │   └─ processed/
+
 │
 ├─ logs/
+
 │
+
 ├─ sql/
+
 │
+
 └─ src/
 
 ---
