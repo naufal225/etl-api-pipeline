@@ -50,7 +50,8 @@ Endpoints used:
 ---
 
 # Project Structure
-etl-api-pipeline/
+etl-api-pipeline
+
 │
 
 ├─ README.md
