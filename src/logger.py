@@ -5,7 +5,7 @@ def build_logger(log_path: Path) -> logging.Logger:
     log_path.parent.mkdir(parents=True, exist_ok=True)
     
     logger = logging.getLogger("ETL_Pipeline")
-    logger.level(logging.INFO)
+    logger.setLevel(logging.INFO)
     logger.handlers.clear()
     logger.propagate = False
     
