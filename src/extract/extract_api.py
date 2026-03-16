@@ -31,7 +31,11 @@ logger = build_logger(LOG_PATH)
 def fetch_json(url: str, endpoint_name: str):
     logger.info("Fetching into %s", url)
     start = time.time()
-    r = requests.get(url=url, timeout=10)
+    try:
+        r = requests.get(url=url, timeout=10)
+    except Exception as e:
+        logger.exception("Exception occured while fetching data to %s. Error: %s", url, e)
+        raise
     r.raise_for_status()
     end = time.time() - start
     
@@ -43,8 +47,12 @@ def fetch_json(url: str, endpoint_name: str):
     return data
 
 def save_json(data, path: Path):
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2)
+    try:
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+    except Exception as e:
+        logger.exception("Exception occured saving data to %s. Error: %s", path, e)
+        raise
     
 def extract_all():
     for k, v in ENDPOINTS.items():
@@ -54,4 +62,9 @@ def extract_all():
         logger.info("Success, saved %s to %s", k, RAW_DIR / file_name)
     
 if __name__ == "__main__":
+    logger.info("="*90)
+    logger.info("ETL Start")
     extract_all()
+    logger.info("ETL Finished")
+    logger.info("="*90)
+    
