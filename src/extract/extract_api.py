@@ -70,3 +70,34 @@ def main():
     
 if __name__ == "__main__":
     main()
+
+"""
+====================== ANALISIS ======================
+
+Status:
+- Layer extract sudah berjalan untuk use case belajar, tetapi belum cukup
+  robust untuk API ingestion yang stabil di lingkungan industri.
+
+Gap utama:
+1. Retry belum benar-benar berjalan. Di dalam loop `for`, exception langsung
+   di-raise pada kegagalan pertama, sehingga percobaan berikutnya tidak pernah
+   dieksekusi.
+2. Belum memakai `requests.Session`, backoff, dan retry berbasis status code
+   (`429`, `500`, `502`, `503`, `504`).
+3. Belum ada validasi schema response. Kode masih mengasumsikan bentuk JSON
+   sederhana, padahal API produksi sering punya wrapper `status/code/data`.
+4. Raw file ditulis langsung ke target path tanpa atomic write atau checksum,
+   sehingga raw zone rawan korup jika proses terputus di tengah jalan.
+5. Belum ada metadata extract seperti extraction timestamp, source endpoint,
+   row count, response status, dan latency per endpoint.
+6. Import masih mengandalkan `sys.path.append`, tanda bahwa package structure
+   belum rapi untuk project Python yang reusable.
+
+Agar lebih profesional:
+- Gunakan `Session` reusable dengan retry + exponential backoff.
+- Validasi response contract sebelum disimpan.
+- Simpan metadata extract dan buat raw write yang atomic.
+- Pisahkan concern HTTP client, persistence, dan orchestration stage.
+
+==========================================================================
+"""

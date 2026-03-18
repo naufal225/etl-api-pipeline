@@ -28,3 +28,31 @@ def build_logger(log_path: Path) -> logging.Logger:
     logger.addHandler(ch)
     
     return logger
+
+"""
+====================== ANALISIS ======================
+
+Status:
+- Logging dasar sudah berfungsi, tetapi observability masih terlalu minimal
+  untuk ETL pipeline yang dijalankan rutin atau dijadwalkan.
+
+Gap utama:
+1. Semua module memakai nama logger yang sama: `ETL_Pipeline`. Ini membuat
+   asal log per file atau per tahap sulit dilacak.
+2. `logger.handlers.clear()` berisiko menghapus handler yang sudah dipasang
+   oleh module lain ketika file ini diinisialisasi ulang.
+3. Belum ada `RotatingFileHandler` atau strategi rotasi log. File log akan
+   terus membesar saat pipeline dijalankan berkali-kali.
+4. Format log belum memuat konteks penting seperti `run_id`, nama tahap,
+   module, atau jumlah row yang diproses.
+5. Belum ada kontrol level log dari environment, sehingga sulit membedakan
+   mode dev, debug, dan production.
+
+Agar lebih profesional:
+- Gunakan logger per module (`__name__`) atau child logger per stage.
+- Tambahkan run identifier untuk setiap eksekusi pipeline.
+- Gunakan rotating log handler atau structured logging JSON.
+- Pisahkan konfigurasi logging dari business logic.
+
+==========================================================================
+"""
