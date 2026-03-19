@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 import os
 import sys
 import time
+import logging
 
 from pathlib import Path
 import pandas as pd
@@ -14,16 +15,12 @@ import pandas as pd
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from config import PgConfig
-from logger import build_logger
 
 BASE_DIR = Path(__file__).resolve().parents[2]
 
 PROCESSED_DIR = BASE_DIR / "data" / "processed"
 
-LOG_PATH = BASE_DIR / "logs" / "etl-run.log"
-
-logger = build_logger(LOG_PATH)
-
+logger = logging.getLogger(__name__)
 
 def load_config() -> PgConfig:
 
@@ -82,9 +79,9 @@ def insert_upsert(cur: cursor, df: pd.DataFrame):
         raise
 
 
-def load_into_postgres(cfg: PgConfig):
+def load_into_postgres(path: Path, cfg: PgConfig):
 
-    df = load_csv(PROCESSED_DIR / "posts_analytics.csv")
+    df = load_csv(path / "posts_analytics.csv")
 
     if len(df) == 0:
         logger.error("Csv file has 0 row")
@@ -137,19 +134,19 @@ def load_into_postgres(cfg: PgConfig):
             logger.info("Database conncection closed")
 
 
-def main():
-    logger.info("Start to load into database")
+# def main():
+#     logger.info("Start to load into database")
 
-    start = time.time()
-    cfg = load_config()
-    load_into_postgres(cfg)
-    end = time.time() - start
+#     start = time.time()
+#     cfg = load_config()
+#     load_into_postgres(PROCESSED_DIR, cfg)
+#     end = time.time() - start
 
-    logger.info("Load into database finished | dur = %.4fs", end)
+#     logger.info("Load into database finished | dur = %.4fs", end)
 
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()
 
 
 """

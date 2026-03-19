@@ -1,16 +1,27 @@
 from pathlib import Path
 import logging
 
-def build_logger(log_path: Path) -> logging.Logger:
+class RunIdFilter(logging.Filter):
+   def __init__(self, run_id):
+       self.run_id = run_id
+       
+   def filter(self, record):
+      record.run_id = self.run_id
+      return True
+
+def build_logger(log_path: Path, run_id: str) -> logging.Logger:
     log_path.parent.mkdir(parents=True, exist_ok=True)
     
-    logger = logging.getLogger("ETL_Pipeline")
+    logger = logging.getLogger()
+    
+    print(logger)
+    
     logger.setLevel(logging.INFO)
     logger.handlers.clear()
-    logger.propagate = False
+    logger.propagate = True
     
     fmt = logging.Formatter(
-        fmt="%(asctime)s | %(levelname)s | %(message)s",
+        fmt="%(asctime)s | %(levelname)s | %(name)s | %(message)s | run_id=%(run_id)s",
         datefmt="%Y-%m-%d %H:%M:%S"
     )
     
@@ -23,6 +34,12 @@ def build_logger(log_path: Path) -> logging.Logger:
     ch = logging.StreamHandler()
     ch.setLevel(logging.INFO)
     ch.setFormatter(fmt)
+    
+   #  tambahkan filter
+   
+    run_filter = RunIdFilter(run_id=run_id)
+    fh.addFilter(run_filter)
+    ch.addFilter(run_filter)
     
     logger.addHandler(fh)
     logger.addHandler(ch)

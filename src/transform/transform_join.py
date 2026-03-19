@@ -2,10 +2,9 @@ import pandas as pd
 from pathlib import Path
 import sys
 import os
+import logging
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-from logger import build_logger
 
 BASE_DIR = Path(__file__).resolve().parents[2]
 
@@ -14,9 +13,7 @@ RAW_DIR = BASE_DIR / "data" / "raw"
 PROCESSED_DIR = BASE_DIR / "data" / "processed"
 PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
 
-LOG_PATH = BASE_DIR / "logs" / "etl-run.log"
-
-logger = build_logger(LOG_PATH)
+logger = logging.getLogger(__name__)
 
 def load_data(path: Path):
     try:
@@ -51,10 +48,10 @@ def validate(df: pd.DataFrame):
             f"Data validation failed | comment count = {missing_title}"
         )
 
-def transform():
-    df_users = load_data(RAW_DIR / "users.json")
-    df_posts = load_data(RAW_DIR / "posts.json")
-    df_comments = load_data(RAW_DIR / "comments.json")
+def transform(path: Path):
+    df_users = load_data(path / "users.json")
+    df_posts = load_data(path / "posts.json")
+    df_comments = load_data(path / "comments.json")
     
     df_users = df_users.rename(columns={
         "id":"user_id",
@@ -130,14 +127,16 @@ def transform():
     except Exception as e:
         logger.exception("Error occured while saving to %s", path)
         
-def main():
-    logger.info("="*90)
-    logger.info("Transform Start")
-    transform()
-    logger.info("Transform Finished")
+    return PROCESSED_DIR
+        
+# def main():    
+#     logger.info("="*90)
+#     logger.info("Transform Start")
+#     transform(RAW_DIR)
+#     logger.info("Transform Finished")
     
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()
 
 """
 ====================== ANALISIS  ======================

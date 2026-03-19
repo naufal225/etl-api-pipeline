@@ -6,7 +6,7 @@ import json
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from logger import build_logger
+import logging
 import time 
 
 BASE_DIR = Path(__file__).resolve().parents[2]
@@ -14,7 +14,9 @@ BASE_DIR = Path(__file__).resolve().parents[2]
 RAW_DIR = BASE_DIR / "data" / "raw"
 RAW_DIR.mkdir(parents=True, exist_ok=True)
 
-LOG_PATH = BASE_DIR / "logs" / "etl-run.log"
+logger = logging.getLogger(__name__)
+
+print(logger)
 
 BASE_URL = "https://jsonplaceholder.typicode.com"
 ENDPOINTS = {
@@ -22,8 +24,6 @@ ENDPOINTS = {
     "posts" : "/posts",
     "comments" : "/comments"
 }
-
-logger = build_logger(LOG_PATH)
 
 def fetch_json(url: str, endpoint_name: str):
     logger.info("Fetching into %s", url)
@@ -61,15 +61,16 @@ def extract_all():
         file_name = k + ".json"
         save_json(r, RAW_DIR / file_name)
         logger.info("Success, saved %s to %s", k, RAW_DIR / file_name)
+    return RAW_DIR
         
-def main():
-    logger.info("="*90)
-    logger.info("ETL Start")
-    extract_all()
-    logger.info("ETL Finished")
+# def main():    
+#     logger.info("="*90)
+#     logger.info("ETL Start")
+#     extract_all()
+#     logger.info("ETL Finished")
     
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()
 
 """
 ====================== ANALISIS ======================
