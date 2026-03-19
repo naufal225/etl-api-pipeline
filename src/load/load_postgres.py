@@ -40,7 +40,6 @@ def load_config() -> PgConfig:
         logger.exception("Exception occured while loading config")
         raise
 
-
 def load_csv(path: Path) -> pd.DataFrame:
 
     try:
