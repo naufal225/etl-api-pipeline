@@ -11,6 +11,13 @@ def _env(key: str, default: str) -> str:
     val = os.getenv(key=key, default=default)
     return val
 
+def mark_secret(pwd: str, keep: int) -> str :
+    if pwd is None:
+        return "<none>"
+    if len(pwd) <= keep:
+        return "*" * keep
+    return pwd[:keep] + (len(pwd) - keep) * "*"
+    
 @dataclass(frozen=True)
 class PgConfig:
     host: str
@@ -32,7 +39,7 @@ class PgConfig:
     def safe_str(self) -> str:
         return (
             f"PgConfig(host={self.host}, port={self.port}, dbname={self.dbname}, "
-            f"user={self.user}, password={self.password})"
+            f"user={self.user}, password={mark_secret(self.password)})"
         )
 
 """
