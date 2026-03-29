@@ -25,27 +25,95 @@ ENDPOINTS = {
     "comments" : "/comments"
 }
 
-def fetch_json(url: str, endpoint_name: str):
-    logger.info("Fetching into %s", url)
-    start = time.time()
+def fetch_json(
+    url: str,
+    endpoint_name: str,
+    max_attempts: int = 3,
+    base_delay: float = 1.0
+):
+    start = time.perf_counter()
+    last_error = None    
     
-    for i in range(3):
+    for attempt in range(1, max_attempts + 1):
         try:
-            r = requests.get(url=url, timeout=10)
-            break
-        except Exception as e:
-            logger.exception("Exception occured while fetching data to %s. Error: %s", url, e)
+            logger.info("Fetching endpoint=%s url=%s attempt:%d/%d",
+                endpoint_name,
+                url,
+                attempt,
+                max_attempts            
+            )
+
+            response = requests.get(url=url, timeout=10)
+            response.raise_for_status()
+            data = response.json()
+
+            duration = time.perf_counter() - start
+            rows_count = len(data) if isinstance(data, list) else 1
+
+            logger.info("Fetched endpoint=%s rows=%d duration=%.2f",
+                url,
+                rows_count,
+                duration
+            )
+
+            return data
+        except requests.exceptions.Timeout as e:
+            last_error = e
+            logger.warning("Timeout while fething endpoint=%s attempt=%d/%d",
+                endpoint_name,
+                attempt,
+                max_attempts               
+            )
+        except requests.exceptions.ConnectionError as e:
+            last_error = e
+            logger.warning("Connection error while fetching endpoint=%s attempt=%d/%d",
+                endpoint_name,
+                attempt,
+                max_attempts               
+            )
+        except requests.exceptions.HTTPError as e:
+            last_error = e
+            status_code = e.response.status_code if e.response is not None else None
+            
+            if status_code is not None and status_code < 500 and status_code != 429:
+                logger.exception("Non-retriable HTTP error endpoint=%s status=%s",
+                    endpoint_name, 
+                    status_code                 
+                )
+                raise
+            
+            logger.warning("Retriable HTTP error endpoint=%s status_code=%s attempt=%d/%d",
+                endpoint_name,
+                status_code,
+                attempt,
+                max_attempts
+            )
+        except requests.exceptions.RequestException as e:
+            last_error = e
+            
+            logger.exception("Unexpected request error endpoint=%s attempt=%d/%d",
+                endpoint_name,
+                attempt,
+                max_attempts
+            )
             raise
+        
+        if attempt < max_attempts:
+            sleep_seconds = base_delay * attempt
+            logger.info("Retrying endpoint=%s in %.1f",
+                endpoint_name,
+                sleep_seconds
+            )
     
-    r.raise_for_status()
-    end = time.time() - start
-    
-    data = r.json()
-    
-    rows_count = len(data) if isinstance(data, list) else 1 #sekarang ok, tapi jadi masalah kalau struktur nya ada status, code, message, baru data
-    
-    logger.info("Fetched %s endpoint | rows = %d | duration = %.2fs", endpoint_name, rows_count, end)
-    return data
+    logger.exception(
+        "Failed fetching endpoint=%s after %d attempts",
+        endpoint_name,
+        max_attempts,
+        exc_info=last_error
+    )
+    raise RuntimeError(
+        f"Failed fetching endpoint={endpoint_name} after {max_attempts} attempts"
+    ) from last_error
 
 def save_json(data, path: Path):
     try:

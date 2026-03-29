@@ -11,7 +11,7 @@ def _env(key: str, default: str) -> str:
     val = os.getenv(key=key, default=default)
     return val
 
-def mark_secret(pwd: str, keep: int) -> str :
+def mark_secret(pwd: str, keep: int = 3) -> str :
     if pwd is None:
         return "<none>"
     if len(pwd) <= keep:
